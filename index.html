@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <title>Reporte de Temperatura en Aulas</title>
+</head>
+<body>
+  <div class="container">
+    <h1>Reporte de Temperatura</h1>
+
+    <select id="aulaSelect">
+      <option value="">Cargando aulas...</option>
+    </select>
+
+    <select id="tempSelect">
+      <option value="frio">❄️ Frío</option>
+      <option value="calor">🔥 Calor</option>
+    </select>
+
+    <button id="reportButton">Enviar Reporte</button>
+
+    <!-- Div para mostrar mensajes dinámicamente -->
+    <div id="status"></div>
+  </div>
+
+  <!-- Importar JS como módulo -->
+  <script type="module" src="/assets/js/js.js"></script>
+</body>
+</html>
