@@ -7,7 +7,7 @@
   <title>Reporte de Temperatura en Aulas</title>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="reportSection">
     <h1>Reporte de Temperatura</h1>
 
     <select id="aulaSelect">
@@ -20,12 +20,18 @@
     </select>
 
     <button id="reportButton">Enviar Reporte</button>
+    <button id="toggleStatsButton">Ver estadísticas</button>
 
-    <!-- Div para mostrar mensajes dinámicamente -->
     <div id="status"></div>
   </div>
 
-  <!-- Importar JS como módulo -->
+  <div id="statsSection">
+    <h2>Estadísticas de Reportes</h2>
+    <canvas id="grafico" width="400" height="200"></canvas>
+  </div>
+
+  <!-- Chart.js debe ir antes del script principal -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="/assets/js/js.js"></script>
 </body>
 </html>
