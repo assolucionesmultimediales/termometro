@@ -7,6 +7,7 @@
   <title>Reporte de Temperatura en Aulas</title>
 </head>
 <body>
+  <div>
   <div class="container" id="reportSection">
     <h1>Reporte de Temperatura</h1>
 
@@ -27,10 +28,11 @@
 
   <div id="statsSection">
     <h2>Estadísticas de Reportes</h2>
-    <canvas id="grafico" width="400" height="200"></canvas>
+    <canvas id="grafico"></canvas>
+    <button id="btnVolver">Volver</button>
+  </div>
   </div>
 
-  <!-- Chart.js debe ir antes del script principal -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="/assets/js/js.js"></script>
 </body>

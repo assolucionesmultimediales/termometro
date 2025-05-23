@@ -15,6 +15,7 @@ const toggleStatsButton = document.getElementById("toggleStatsButton");
 const reportSection = document.getElementById("reportSection");
 const statsSection = document.getElementById("statsSection");
 const canvasContainer = document.getElementById("canvasContainer");
+const btnVolver = document.getElementById("btnVolver");
 let statusDiv = document.getElementById("status");
 
 // Función que carga las aulas desde un archivo JSON local y las muestra en el <select>
@@ -165,7 +166,13 @@ function toggleEstadisticas() {
   }
 }
 
+function volver(){
+  statsSection.style.display ='none'
+  reportSection.style.display ='block'
+}
+
 // Eventos
 reportButton.addEventListener('click', guardarReporte);
 toggleStatsButton.addEventListener('click', toggleEstadisticas);
 document.addEventListener('DOMContentLoaded', cargarAulas);
+btnVolver.addEventListener('click', volver)
