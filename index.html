@@ -7,7 +7,7 @@
   <title>Reporte de Temperatura en Aulas</title>
 </head>
 <body>
-  <div>
+  <div id="contenedor-gral">
   <div class="container" id="reportSection">
     <h1>Reporte de Temperatura</h1>
 
@@ -16,6 +16,7 @@
     </select>
 
     <select id="tempSelect">
+      <option>Tenes frio o calor?</option>
       <option value="frio">❄️ Frío</option>
       <option value="calor">🔥 Calor</option>
     </select>
@@ -28,6 +29,7 @@
 
   <div id="statsSection">
     <h2>Estadísticas de Reportes</h2>
+    <div id="statusStats"></div>
     <canvas id="grafico"></canvas>
     <button id="btnVolver">Volver</button>
   </div>

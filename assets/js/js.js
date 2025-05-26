@@ -14,6 +14,7 @@ const reportSection = document.getElementById("reportSection");
 const statsSection = document.getElementById("statsSection");
 const canvasContainer = document.getElementById("canvasContainer");
 const btnVolver = document.getElementById("btnVolver");
+const statusStats = document.getElementById("statusStats"); // div nuevo para mostrar estado en estadísticas
 let statusDiv = document.getElementById("status");
 
 // coordenadas de la facultad
@@ -31,7 +32,7 @@ async function cargarAulas() {
     if (!res.ok) throw new Error("No se pudo cargar aulas.json");
 
     const data = await res.json(); // convierto la respuesta a json
-    const aulas = [...new Set(data)]; // elimino el duplicado por las dudas
+    const aulas = [...new Set(data)]; // elimino duplicados por las dudas
 
     // inserto las opciones en el <select>
     aulaSelect.innerHTML = '<option value="">-- Seleccioná aula --</option>';
@@ -53,13 +54,13 @@ async function cargarAulas() {
 
 // calculo la distancia entre dos puntos con fórmula de Haversine
 function distanciaEnMetros(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // radio de la Tierra en metros
-  const rad = Math.PI / 180;
-  const dLat = (lat2 - lat1) * rad;
-  const dLon = (lon2 - lon1) * rad;
+  const R = 6371e3; // radio de la Tierra en metros (equivale a 6371000)
+  const rad = Math.PI / 180; // convierto grados a radianes
+  const dLat = (lat2 - lat1) * rad; // diferencia de latitud en radianes
+  const dLon = (lon2 - lon1) * rad; // diferencia de longitud en radianes
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); // fórmula de Haversine
+  return R * c; // devuelvo distancia en metros
 }
 
 // función que guarda un reporte en Firebase con la hora argentina y el nombre del aula como "ubicacion"
@@ -131,20 +132,25 @@ async function guardarReporte() {
 
 // función para obtener datos desde Firestore y graficarlos usando Chart.js
 async function mostrarEstadisticas() {
+  statusStats.textContent = "Cargando estadísticas...";
+  statusStats.className = "loading";
+
   const querySnapshot = await getDocs(collection(db, "reportes"));
-  const data = {};
+  const data = {}; // objeto para acumular los datos por aula
 
   querySnapshot.forEach(doc => {
     const { ubicacion, temperatura } = doc.data();
+
     if (!data[ubicacion]) {
-      data[ubicacion] = { frio: 0, calor: 0 };
+      data[ubicacion] = { frio: 0, calor: 0 }; // inicializo los contadores en cero por cada aula
     }
-    data[ubicacion][temperatura]++;
+
+    data[ubicacion][temperatura]++; // incremento el contador de frio o calor según corresponda
   });
 
-  const labels = Object.keys(data);
-  const frioData = labels.map(label => data[label].frio);
-  const calorData = labels.map(label => data[label].calor);
+  const labels = Object.keys(data); // obtengo las ubicaciones (nombres de aulas)
+  const frioData = labels.map(label => data[label].frio); // armo array con cantidad de reportes de frio por aula
+  const calorData = labels.map(label => data[label].calor); // idem para calor
 
   const ctx = document.getElementById('grafico').getContext('2d');
   new Chart(ctx, {
@@ -168,11 +174,14 @@ async function mostrarEstadisticas() {
       responsive: true,
       scales: {
         y: {
-          beginAtZero: true
+          beginAtZero: true // el gráfico arranca desde cero
         }
       }
     }
   });
+
+  statusStats.textContent = "";
+  statusStats.className = "";
 }
 
 // función que alterna entre la vista del formulario de reporte y la de estadísticas
@@ -186,14 +195,16 @@ function toggleEstadisticas() {
   } else {
     reportSection.style.display = 'none';
     statsSection.style.display = 'block';
-    toggleStatsButton.textContent = 'Volver al reporte';
+    toggleStatsButton.textContent = 'Ver estadísticas';
     mostrarEstadisticas();
   }
 }
 
-function volver(){
-  statsSection.style.display ='none'
-  reportSection.style.display ='block'
+function volver() {
+  statsSection.style.display = 'none';
+  reportSection.style.display = 'block';
+   statusStats.style.display = 'none';
+
 }
 
 // eventos
