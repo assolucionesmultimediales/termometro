@@ -12,10 +12,10 @@ const firebaseConfig = {
   measurementId: "G-GGEGE5BFGN"
 };
 
-// Inicializa Firebase
+// inicializo Firebase
 const app = initializeApp(firebaseConfig);
 
-// 🔥 Conectamos Firestore
+// conecto con firestore
 const db = getFirestore(app);
 
 export { db };

@@ -12,15 +12,18 @@ const reportButton = document.getElementById("reportButton");
 const toggleStatsButton = document.getElementById("toggleStatsButton");
 const reportSection = document.getElementById("reportSection");
 const statsSection = document.getElementById("statsSection");
-const canvasContainer = document.getElementById("canvasContainer");
 const btnVolver = document.getElementById("btnVolver");
-const statusStats = document.getElementById("statusStats"); // div nuevo para mostrar estado en estadísticas
+const statusStats = document.getElementById("statusStats");
 let statusDiv = document.getElementById("status");
 
 // coordenadas de la facultad
-const FACULTAD_LAT = -34.604425;  // latitud aproximada
-const FACULTAD_LON = -58.392582;  // longitud aproximada
-const RADIO_PERMITIDO = 150;      // en metros
+const FACULTAD_LAT = -34.611334;
+const FACULTAD_LON = -58.436502;
+const RADIO_PERMITIDO = 450; 
+
+
+// variable global para el gráfico
+let chartInstance = null;
 
 // función que carga las aulas desde un archivo JSON local y las muestra en el <select>
 async function cargarAulas() {
@@ -28,13 +31,12 @@ async function cargarAulas() {
   statusDiv.className = "loading";
 
   try {
-    const res = await fetch(AULAS_JSON); // pido el archivo aulas.json
+    const res = await fetch(AULAS_JSON);
     if (!res.ok) throw new Error("No se pudo cargar aulas.json");
 
-    const data = await res.json(); // convierto la respuesta a json
-    const aulas = [...new Set(data)]; // elimino duplicados por las dudas
+    const data = await res.json();
+    const aulas = [...new Set(data)];
 
-    // inserto las opciones en el <select>
     aulaSelect.innerHTML = '<option value="">-- Seleccioná aula --</option>';
     aulas.forEach(aula => {
       const option = document.createElement("option");
@@ -54,16 +56,17 @@ async function cargarAulas() {
 
 // calculo la distancia entre dos puntos con fórmula de Haversine
 function distanciaEnMetros(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // radio de la Tierra en metros (equivale a 6371000)
-  const rad = Math.PI / 180; // convierto grados a radianes
-  const dLat = (lat2 - lat1) * rad; // diferencia de latitud en radianes
-  const dLon = (lon2 - lon1) * rad; // diferencia de longitud en radianes
+  const R = 6371e3;
+  const rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad;
+  const dLon = (lon2 - lon1) * rad;
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); // fórmula de Haversine
-  return R * c; // devuelvo distancia en metros
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  console.log(R * c)
+  return R * c;
 }
 
-// función que guarda un reporte en Firebase con la hora argentina y el nombre del aula como "ubicacion"
+// función que guarda un reporte en Firebase con hora argentina y ubicación verificada
 async function guardarReporte() {
   const aula = aulaSelect.value;
   const temperatura = tempSelect.value;
@@ -74,7 +77,6 @@ async function guardarReporte() {
     return;
   }
 
-  // solicito la ubicacion actual del usuario
   if (!navigator.geolocation) {
     statusDiv.textContent = "Tu navegador no soporta geolocalización.";
     statusDiv.className = "error";
@@ -84,7 +86,6 @@ async function guardarReporte() {
   navigator.geolocation.getCurrentPosition(async position => {
     const lat = position.coords.latitude;
     const lon = position.coords.longitude;
-
     const distancia = distanciaEnMetros(lat, lon, FACULTAD_LAT, FACULTAD_LON);
 
     if (distancia > RADIO_PERMITIDO) {
@@ -130,61 +131,58 @@ async function guardarReporte() {
   });
 }
 
-// función para obtener datos desde Firestore y graficarlos usando Chart.js
+// función que trae datos de firestore, arma gráfico y tabla dinámica
 async function mostrarEstadisticas() {
   statusStats.textContent = "Cargando estadísticas...";
   statusStats.className = "loading";
 
   const querySnapshot = await getDocs(collection(db, "reportes"));
-  const data = {}; // objeto para acumular los datos por aula
+  const data = {};
 
   querySnapshot.forEach(doc => {
     const { ubicacion, temperatura } = doc.data();
-
     if (!data[ubicacion]) {
-      data[ubicacion] = { frio: 0, calor: 0 }; // inicializo los contadores en cero por cada aula
+      data[ubicacion] = { frio: 0, calor: 0 };
     }
-
-    data[ubicacion][temperatura]++; // incremento el contador de frio o calor según corresponda
+    data[ubicacion][temperatura]++;
   });
 
-  const labels = Object.keys(data); // obtengo las ubicaciones (nombres de aulas)
-  const frioData = labels.map(label => data[label].frio); // armo array con cantidad de reportes de frio por aula
-  const calorData = labels.map(label => data[label].calor); // idem para calor
+  const labels = Object.keys(data);
+  const frioData = labels.map(label => data[label].frio);
+  const calorData = labels.map(label => data[label].calor);
 
   const ctx = document.getElementById('grafico').getContext('2d');
-  new Chart(ctx, {
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+  chartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        {
-          label: 'Frío',
-          backgroundColor: '#3498db',
-          data: frioData
-        },
-        {
-          label: 'Calor',
-          backgroundColor: '#e74c3c',
-          data: calorData
-        }
+        { label: 'Frío', backgroundColor: '#3498db', data: frioData },
+        { label: 'Calor', backgroundColor: '#e74c3c', data: calorData }
       ]
     },
     options: {
       responsive: true,
       scales: {
-        y: {
-          beginAtZero: true // el gráfico arranca desde cero
-        }
+        y: { beginAtZero: true }
       }
     }
   });
 
-  statusStats.textContent = "";
+  let tablaHTML = '<table class="tabla-estadisticas"><thead><tr><th>Aula</th><th>Frío</th><th>Calor</th></tr></thead><tbody>';
+  labels.forEach(label => {
+    tablaHTML += `<tr><td>${label}</td><td>${data[label].frio}</td><td>${data[label].calor}</td></tr>`;
+  });
+  tablaHTML += '</tbody></table>';
+
+  statusStats.innerHTML = tablaHTML;
   statusStats.className = "";
 }
 
-// función que alterna entre la vista del formulario de reporte y la de estadísticas
+// alterno entre la vista de formulario y la de estadísticas
 function toggleEstadisticas() {
   const mostrandoEstadisticas = statsSection.style.display === 'block';
 
@@ -203,8 +201,8 @@ function toggleEstadisticas() {
 function volver() {
   statsSection.style.display = 'none';
   reportSection.style.display = 'block';
-   statusStats.style.display = 'none';
-
+  statusStats.innerHTML = '';
+  statusStats.className = '';
 }
 
 // eventos
