@@ -19,7 +19,7 @@ let statusDiv = document.getElementById("status");
 // coordenadas de la facultad
 const FACULTAD_LAT = -34.611334;
 const FACULTAD_LON = -58.436502;
-const RADIO_PERMITIDO = 550; 
+const RADIO_PERMITIDO = 450; 
 
 
 // variable global para el gráfico
@@ -86,6 +86,10 @@ async function guardarReporte() {
   navigator.geolocation.getCurrentPosition(async position => {
     const lat = position.coords.latitude;
     const lon = position.coords.longitude;
+
+    console.log(lat);
+    console.log(lon);
+
     const distancia = distanciaEnMetros(lat, lon, FACULTAD_LAT, FACULTAD_LON);
 
     if (distancia > RADIO_PERMITIDO) {
