@@ -19,7 +19,7 @@ let statusDiv = document.getElementById("status");
 // coordenadas de la facultad
 const FACULTAD_LAT = -34.611334;
 const FACULTAD_LON = -58.436502;
-const RADIO_PERMITIDO = 450; 
+const RADIO_PERMITIDO = 550; 
 
 
 // variable global para el gráfico
