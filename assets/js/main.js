@@ -19,7 +19,7 @@ let statusDiv = document.getElementById("status");
 // coordenadas de la facultad
 const FACULTAD_LAT = -34.611334;
 const FACULTAD_LON = -58.436502;
-const RADIO_PERMITIDO = 450; 
+const RADIO_PERMITIDO = 100; 
 
 
 // variable global para el gráfico
@@ -83,14 +83,28 @@ async function guardarReporte() {
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(async position => {
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
+  let userLat;
+  let userLong;
 
-    console.log(lat);
-    console.log(lon);
-
-    const distancia = distanciaEnMetros(lat, lon, FACULTAD_LAT, FACULTAD_LON);
+  try{
+    fetch('https://ipapi.co/jason',
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      }
+    )
+    .then(response => response.json())
+    .then(response =>{
+      userLat = response.latitude;
+      userLong = response.longitude;
+    })
+  }
+ catch(e){
+  console.log('el llamado fue fallido', e);
+ }
+    const distancia = distanciaEnMetros(userLat, userLong, FACULTAD_LAT, FACULTAD_LON);
 
     if (distancia > RADIO_PERMITIDO) {
       statusDiv.textContent = "Estás fuera del rango permitido para enviar un reporte.";
@@ -128,11 +142,6 @@ async function guardarReporte() {
       statusDiv.textContent = "";
       statusDiv.className = "";
     }, 3000);
-
-  }, () => {
-    statusDiv.textContent = "No se pudo obtener tu ubicación.";
-    statusDiv.className = "error";
-  });
 }
 
 // función que trae datos de firestore, arma gráfico y tabla dinámica
